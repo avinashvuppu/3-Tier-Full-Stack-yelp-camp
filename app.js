@@ -54,7 +54,7 @@ const secret = process.env.SECRET || 'thisshouldbeabettersecret!';
 const store = new MongoDBStore({
     url: dbUrl,
     secret,
-    touchAfter: 24 * 60 * 60 // after 1 day, update the session, else, only update session when something change
+    touchAfter: 24 * 60 * 60
 });
 
 store.on("error", function (e) {
@@ -79,29 +79,23 @@ app.use(session(sessionConfig));
 app.use(flash());
 app.use(helmet({ contentSecurityPolicy: false }));
 
-
+// ✅ Mapbox removed from here
 const scriptSrcUrls = [
     "https://stackpath.bootstrapcdn.com/",
-    "https://api.tiles.mapbox.com/",
-    "https://api.mapbox.com/",
     "https://kit.fontawesome.com/",
     "https://cdnjs.cloudflare.com/",
     "https://cdn.jsdelivr.net",
 ];
+
 const styleSrcUrls = [
     "https://kit-free.fontawesome.com/",
     "https://stackpath.bootstrapcdn.com/",
-    "https://api.mapbox.com/",
-    "https://api.tiles.mapbox.com/",
     "https://fonts.googleapis.com/",
     "https://use.fontawesome.com/",
 ];
-const connectSrcUrls = [
-    "https://api.mapbox.com/",
-    "https://a.tiles.mapbox.com/",
-    "https://b.tiles.mapbox.com/",
-    "https://events.mapbox.com/",
-];
+
+const connectSrcUrls = [];
+
 const fontSrcUrls = [];
 
 app.use(
@@ -125,7 +119,6 @@ app.use(
     })
 );
 
-
 app.use(passport.initialize());
 app.use(passport.session());
 passport.use(new LocalStrategy(User.authenticate()));
@@ -134,22 +127,19 @@ passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
 app.use((req, res, next) => {
-    res.locals.currentUser = req.user; // req.user is user infomation in session that passport define for us
-    res.locals.success = req.flash('success'); // message when success is invoked in route handler
+    res.locals.currentUser = req.user;
+    res.locals.success = req.flash('success');
     res.locals.error = req.flash('error');
     next();
 })
-
 
 app.use('/', userRoutes);
 app.use('/campgrounds', campgroundRoutes)
 app.use('/campgrounds/:id/reviews', reviewRoutes)
 
-
 app.get('/', (req, res) => {
     res.render('home')
 });
-
 
 app.all('*', (req, res, next) => {
     next(new ExpressError('Page Not Found', 404))
@@ -165,5 +155,3 @@ const port = process.env.PORT || 3000;
 app.listen(port, () => {
     console.log(`Serving on port ${port}`)
 })
-
-
